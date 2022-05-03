@@ -7,6 +7,7 @@ use screeps_arena::{
 use wasm_bindgen::prelude::*;
 
 mod logging;
+mod mode;
 
 fn setup() {
     logging::setup_logging(logging::Info);
@@ -21,10 +22,6 @@ pub fn tick() {
     if tick == 1 {
         setup();
     }
-    warn!("hello arena! {}", tick);
-
-    let info = game::arena_info();
-    warn!("arena_info: {:?}", info);
 
     // strategy for spawn and swamp arena, which will conditionally compile in
     // only when this feature is enabled for the crate
