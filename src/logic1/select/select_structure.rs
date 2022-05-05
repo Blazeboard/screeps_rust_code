@@ -1,3 +1,5 @@
+use std::ops::Deref;
+
 use js_sys::Array;
 use log::warn;
 use screeps_arena::{
@@ -58,6 +60,34 @@ pub fn select_free_extensions() -> Option<Vec<StructureExtension>> {
         }
         if !my_free_extensions.is_empty() {
             Some(my_free_extensions)
+        } else {
+            None
+        }
+    } else {
+        None
+    }
+}
+
+pub fn select_out_containers() -> Option<Vec<StructureContainer>> {
+    let my_spawn = select_my_spawn().unwrap();
+    let containers = get_objects_by_prototype(prototypes::STRUCTURE_CONTAINER);
+    if !containers.is_empty() {
+        let mut out_containers: Vec<StructureContainer> = Vec::new();
+        for container in containers {
+            if container
+                .store()
+                .get_used_capacity(Some(ResourceType::Energy))
+                > 0
+                && match container.x().checked_sub(my_spawn.x()) {
+                    Some(x) => x,
+                    None => my_spawn.x() - container.x(),
+                } > 7
+            {
+                out_containers.push(container);
+            }
+        }
+        if !out_containers.is_empty() {
+            Some(out_containers)
         } else {
             None
         }
