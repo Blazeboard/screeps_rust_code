@@ -10,7 +10,6 @@ use logic1::*;
 
 mod logging;
 mod logic1;
-mod select;
 
 fn setup() {
     logging::setup_logging(logging::Info);

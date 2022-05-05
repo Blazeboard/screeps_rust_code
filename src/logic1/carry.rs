@@ -6,7 +6,7 @@ use screeps_arena::{
     prelude::*, Resource, ResourceType, ReturnCode,
 };
 
-use crate::select::{select_creeps::select_carriers, select_structure};
+use super::select::{select_creeps::select_carriers, select_structure};
 
 pub fn carry() {
     let carriers = select_carriers();
