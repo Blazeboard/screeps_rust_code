@@ -19,21 +19,21 @@ pub fn select_my_spawn() -> Option<StructureSpawn> {
     my_spawn
 }
 
-pub fn select_full_container() -> Option<Vec<StructureContainer>> {
+pub fn select_full_containers() -> Option<Vec<StructureContainer>> {
     let containers = get_objects_by_prototype(prototypes::STRUCTURE_CONTAINER);
     if !containers.is_empty() {
-        let mut full_container: Vec<StructureContainer> = Vec::new();
+        let mut full_containers: Vec<StructureContainer> = Vec::new();
         for container in containers {
             if container
                 .store()
                 .get_used_capacity(Some(ResourceType::Energy))
                 > 0
             {
-                full_container.push(container);
+                full_containers.push(container);
             }
         }
-        if !full_container.is_empty() {
-            Some(full_container)
+        if !full_containers.is_empty() {
+            Some(full_containers)
         } else {
             None
         }
