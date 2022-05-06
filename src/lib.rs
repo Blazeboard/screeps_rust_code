@@ -34,18 +34,19 @@ pub fn tick() {
     #[cfg(feature = "arena-spawn-and-swamp")]
     {
         let carrier_body = [Part::Move, Part::Carry, Part::Move, Part::Carry];
+        let dropper_body = [Part::Carry, Part::Carry, Part::Carry, Part::Move];
         let mut enemy_spawn = None;
         let spawns = game::utils::get_objects_by_prototype(prototypes::STRUCTURE_SPAWN);
         // warn!("spawns {}", spawns.len());
         for spawn in spawns {
             if spawn.my().unwrap_or(false) {
-                spawn.spawn_creep(&carrier_body);
+                spawn.spawn_creep(&dropper_body);
             } else {
                 enemy_spawn = Some(spawn);
             }
         }
 
-        carry::carry();
+        drop::drop();
         
         // let mut carriers_not_none = Vec::new();
         // for carrier in &carriers {

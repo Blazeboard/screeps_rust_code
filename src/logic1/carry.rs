@@ -1,12 +1,14 @@
 use js_sys::Array;
-use log::warn;
-use screeps_arena::{
-    constants::prototypes,
-    game::utils::{self, get_objects_by_prototype},
-    prelude::*, Resource, ResourceType::Energy, ReturnCode,
-};
 
-use super::select::{select_creeps::select_carriers, select_structure};
+use screeps_arena::{
+    game::utils::{self},
+    prelude::*,
+    ResourceType::Energy,
+    ReturnCode, StructureExtension,
+};
+use wasm_bindgen::JsCast;
+
+use super::select::{select_creeps::select_carriers, select_resource, select_structure};
 
 pub fn carry() {
     let carriers = select_carriers();
@@ -19,7 +21,7 @@ pub fn carry() {
         // 将Vec转换成Array，Array中的元素必须为JsValue，而StructureExtension类型即是
         let my_free_extensions_array = Array::new();
         if my_free_extensions.is_some() {
-            let my_free_extensions = my_free_extensions.clone().unwrap();
+            let my_free_extensions = my_free_extensions.as_ref().unwrap();
             for num in 0..my_free_extensions.len() {
                 my_free_extensions_array.push(&my_free_extensions[num]);
             }
@@ -34,137 +36,162 @@ pub fn carry() {
         if utils::get_ticks() <= 240 {
             if carriers.len() > 0 {
                 for carrier in carriers {
-                    if carrier
-                        .store()
-                        .get_free_capacity(Some(Energy))
-                        > 0
-                    {
+                    if carrier.store().get_free_capacity(Some(Energy)) > 0 {
                         let carrier_container_closest =
                             carrier.find_closest_by_range(&full_container_array);
+                        let capacity: u32 = carrier.store().get_free_capacity(Some(Energy)) as u32;
+                        if carrier.withdraw(
+                            carrier_container_closest.as_ref().unwrap().unchecked_ref(),
+                            Energy,
+                            Some(capacity),
+                        ) == ReturnCode::NotInRange
+                        {
+                            carrier.move_to(carrier_container_closest.unwrap().as_ref(), None);
+                        }
+                        // carrier.move_to(carrier_container_closest.unwrap().as_ref(), None);
 
-                        carrier.move_to(carrier_container_closest.unwrap().as_ref(), None);
-                        let capacity: u32 = carrier
-                            .store()
-                            .get_free_capacity(Some(Energy))
-                            as u32;
-                        for num in 0..full_containers.len() {
-                            if carrier.withdraw(
-                                full_containers[num].as_ref(),
+                        // for num in 0..full_containers.len() {
+                        //     if carrier.withdraw(
+                        //         full_containers[num].as_ref(),
+                        //         Energy,
+                        //         Some(capacity),
+                        //     ) == ReturnCode::NotInRange
+                        //     {
+                        //         continue;
+                        //     }
+                        // }
+                    } else {
+                        if my_free_extensions.is_some() {
+                            let carrier_extension_closest =
+                                carrier.find_closest_by_range(&my_free_extensions_array);
+                            let capacity: u32 = carrier.store().get_capacity(Some(Energy)) as u32;
+                            if carrier.transfer(
+                                carrier_extension_closest
+                                    .as_ref()
+                                    .unwrap()
+                                    .unchecked_ref::<StructureExtension>(),
                                 Energy,
                                 Some(capacity),
                             ) == ReturnCode::NotInRange
                             {
-                                continue;
+                                carrier.move_to(carrier_extension_closest.as_ref().unwrap(), None);
                             }
-                        }
-                    } else {
-                        if my_free_extensions.is_some() {
-                            let my_free_extensions = my_free_extensions.clone().unwrap();
-                            let carrier_extension_closest =
-                                carrier.find_closest_by_range(&my_free_extensions_array);
 
-                            carrier.move_to(carrier_extension_closest.unwrap().as_ref(), None);
-                            let capacity: u32 =
-                                carrier.store().get_capacity(Some(Energy)) as u32;
-                            for num in 0..my_free_extensions.len() {
-                                if carrier.transfer(
-                                    &my_free_extensions[num],
-                                    Energy,
-                                    Some(capacity),
-                                ) == ReturnCode::NotInRange
-                                {
-                                    continue;
-                                }
-                            }
+                            // carrier.move_to(carrier_extension_closest.unwrap().as_ref(), None);
+                            // for num in 0..my_free_extensions.len() {
+                            //     if carrier.transfer(
+                            //         &my_free_extensions[num],
+                            //         Energy,
+                            //         Some(capacity),
+                            //     ) == ReturnCode::NotInRange
+                            //     {
+                            //         continue;
+                            //     }
+                            // }
                         }
-                        carrier.move_to(my_spawn.clone().unwrap().as_ref(), None);
-                        let capacity: u32 = carrier
-                            .store()
-                            .get_used_capacity(Some(Energy))
-                            as u32;
-                        carrier.transfer(
-                            &my_spawn.clone().unwrap(),
-                            Energy,
-                            Some(capacity),
-                        );
+                        let capacity: u32 = carrier.store().get_used_capacity(Some(Energy)) as u32;
+                        if carrier.transfer(my_spawn.as_ref().unwrap(), Energy, Some(capacity))
+                            == ReturnCode::NotInRange
+                        {
+                            carrier.move_to(my_spawn.as_ref().unwrap(), None);
+                        }
+                        // carrier.move_to(my_spawn.clone().unwrap().as_ref(), None);
+                        // let capacity: u32 = carrier.store().get_used_capacity(Some(Energy)) as u32;
+                        // carrier.transfer(&my_spawn.clone().unwrap(), Energy, Some(capacity));
                     }
                 }
             }
         } else if utils::get_ticks() > 240 {
             if carriers.len() > 0 {
                 for carrier in carriers {
-                    if carrier
-                        .store()
-                        .get_free_capacity(Some(Energy))
-                        > 0
-                    {
-                        let carrier_container_closest =
-                            carrier.find_closest_by_range(&full_container_array);
-                        let resources = get_objects_by_prototype(prototypes::RESOURCE);
-                        let mut resource_energy: Vec<Resource> = Vec::new();
-                        for resource in resources {
-                            if resource.resource_type() == Energy {
-                                resource_energy.push(resource);
+                    if carrier.store().get_free_capacity(Some(Energy)) > 0 {
+                        let resources_energy = select_resource::select_energy();
+                        if resources_energy.is_some() {
+                            let resources_energy = resources_energy.unwrap();
+                            let resource_energy_array = Array::new();
+                            for num in 0..resources_energy.len() {
+                                resource_energy_array.push(resources_energy[num].as_ref());
                             }
-                        }
-                        let resource_energy_array = Array::new();
-                        for num in 0..resource_energy.len() {
-                            resource_energy_array.push(resource_energy[num].as_ref());
-                        }
-                        let carrier_resource_closest =
-                            carrier.find_closest_by_range(&resource_energy_array);
-                        carrier.move_to(carrier_resource_closest.unwrap().as_ref(), None);
-                        for resource in resource_energy {
-                            if carrier.pickup(&resource) == ReturnCode::NotInRange {
-                                continue;
+                            let carrier_resource_closest =
+                                carrier.find_closest_by_range(&resource_energy_array);
+
+                            if carrier
+                                .pickup(carrier_resource_closest.as_ref().unwrap().unchecked_ref())
+                                == ReturnCode::NotInRange
+                            {
+                                carrier.move_to(carrier_resource_closest.as_ref().unwrap(), None);
                             }
-                        }
-                        carrier.move_to(carrier_container_closest.unwrap().as_ref(), None);
-                        let capacity: u32 = carrier
-                            .store()
-                            .get_free_capacity(Some(Energy))
-                            as u32;
-                        for num in 0..full_containers.len() {
+
+                            let carrier_container_closest =
+                                carrier.find_closest_by_range(full_container_array.as_ref());
+                            let capacity: u32 =
+                                carrier.store().get_free_capacity(Some(Energy)) as u32;
                             if carrier.withdraw(
-                                &full_containers[num],
+                                carrier_container_closest.as_ref().unwrap().unchecked_ref(),
                                 Energy,
                                 Some(capacity),
                             ) == ReturnCode::NotInRange
                             {
-                                continue;
+                                carrier.move_to(carrier_container_closest.as_ref().unwrap(), None);
                             }
+
+                            // carrier.move_to(carrier_resource_closest.unwrap().as_ref(), None);
+                            // for resource in resource_energy {
+                            //     if carrier.pickup(&resource) == ReturnCode::NotInRange {
+                            //         continue;
+                            //     }
+                            // }
+                            // carrier.move_to(carrier_container_closest.unwrap().as_ref(), None);
+                            // let capacity: u32 = carrier.store().get_free_capacity(Some(Energy)) as u32;
+                            // for num in 0..full_containers.len() {
+                            //     if carrier.withdraw(&full_containers[num], Energy, Some(capacity))
+                            //         == ReturnCode::NotInRange
+                            //     {
+                            //         continue;
+                            //     }
+                            // }
                         }
                     } else {
                         if my_free_extensions.is_some() {
-                            let my_free_extensions = my_free_extensions.clone().unwrap();
                             let carrier_extension_closest =
                                 carrier.find_closest_by_range(&my_free_extensions_array);
-                            carrier.move_to(carrier_extension_closest.unwrap().as_ref(), None);
-                            let capacity: u32 = carrier
-                                .store()
-                                .get_used_capacity(Some(Energy))
-                                as u32;
-                            for num in 0..my_free_extensions.len() {
-                                if carrier.transfer(
-                                    &my_free_extensions[num],
-                                    Energy,
-                                    Some(capacity),
-                                ) == ReturnCode::NotInRange
-                                {
-                                    continue;
-                                }
+                            let capacity: u32 =
+                                carrier.store().get_used_capacity(Some(Energy)) as u32;
+
+                            if carrier.transfer(
+                                carrier_extension_closest
+                                    .as_ref()
+                                    .unwrap()
+                                    .unchecked_ref::<StructureExtension>(),
+                                Energy,
+                                Some(capacity),
+                            ) == ReturnCode::NotInRange
+                            {
+                                carrier.move_to(carrier_extension_closest.as_ref().unwrap(), None);
                             }
+                            // carrier.move_to(carrier_extension_closest.unwrap().as_ref(), None);
+                            // let capacity: u32 =
+                            //     carrier.store().get_used_capacity(Some(Energy)) as u32;
+                            // for num in 0..my_free_extensions.len() {
+                            //     if carrier.transfer(
+                            //         &my_free_extensions[num],
+                            //         Energy,
+                            //         Some(capacity),
+                            //     ) == ReturnCode::NotInRange
+                            //     {
+                            //         continue;
+                            //     }
+                            // }
                         }
-                        carrier.move_to(my_spawn.clone().unwrap().as_ref(), None);
-                        let capacity: u32 = carrier
-                            .store()
-                            .get_used_capacity(Some(Energy))
-                            as u32;
-                        carrier.transfer(
-                            &my_spawn.clone().unwrap(),
-                            Energy,
-                            Some(capacity),
-                        );
+                        let capacity: u32 = carrier.store().get_used_capacity(Some(Energy)) as u32;
+                        if carrier.transfer(my_spawn.as_ref().unwrap(), Energy, Some(capacity))
+                            == ReturnCode::NotInRange
+                        {
+                            carrier.move_to(my_spawn.as_ref().unwrap(), None);
+                        }
+                        // carrier.move_to(my_spawn.clone().unwrap().as_ref(), None);
+                        // let capacity: u32 = carrier.store().get_used_capacity(Some(Energy)) as u32;
+                        // carrier.transfer(&my_spawn.clone().unwrap(), Energy, Some(capacity));
                     }
                 }
             }
