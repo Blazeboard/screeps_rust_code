@@ -3,7 +3,7 @@ use log::warn;
 use screeps_arena::{
     constants::prototypes,
     game::utils::{self, get_objects_by_prototype},
-    prelude::*, Resource, ResourceType, ReturnCode,
+    prelude::*, Resource, ResourceType::Energy, ReturnCode,
 };
 
 use super::select::{select_creeps::select_carriers, select_structure};
@@ -36,7 +36,7 @@ pub fn carry() {
                 for carrier in carriers {
                     if carrier
                         .store()
-                        .get_free_capacity(Some(ResourceType::Energy))
+                        .get_free_capacity(Some(Energy))
                         > 0
                     {
                         let carrier_container_closest =
@@ -45,12 +45,12 @@ pub fn carry() {
                         carrier.move_to(carrier_container_closest.unwrap().as_ref(), None);
                         let capacity: u32 = carrier
                             .store()
-                            .get_free_capacity(Some(ResourceType::Energy))
+                            .get_free_capacity(Some(Energy))
                             as u32;
                         for num in 0..full_containers.len() {
                             if carrier.withdraw(
                                 full_containers[num].as_ref(),
-                                ResourceType::Energy,
+                                Energy,
                                 Some(capacity),
                             ) == ReturnCode::NotInRange
                             {
@@ -65,11 +65,11 @@ pub fn carry() {
 
                             carrier.move_to(carrier_extension_closest.unwrap().as_ref(), None);
                             let capacity: u32 =
-                                carrier.store().get_capacity(Some(ResourceType::Energy)) as u32;
+                                carrier.store().get_capacity(Some(Energy)) as u32;
                             for num in 0..my_free_extensions.len() {
                                 if carrier.transfer(
                                     &my_free_extensions[num],
-                                    ResourceType::Energy,
+                                    Energy,
                                     Some(capacity),
                                 ) == ReturnCode::NotInRange
                                 {
@@ -80,11 +80,11 @@ pub fn carry() {
                         carrier.move_to(my_spawn.clone().unwrap().as_ref(), None);
                         let capacity: u32 = carrier
                             .store()
-                            .get_used_capacity(Some(ResourceType::Energy))
+                            .get_used_capacity(Some(Energy))
                             as u32;
                         carrier.transfer(
                             &my_spawn.clone().unwrap(),
-                            ResourceType::Energy,
+                            Energy,
                             Some(capacity),
                         );
                     }
@@ -95,7 +95,7 @@ pub fn carry() {
                 for carrier in carriers {
                     if carrier
                         .store()
-                        .get_free_capacity(Some(ResourceType::Energy))
+                        .get_free_capacity(Some(Energy))
                         > 0
                     {
                         let carrier_container_closest =
@@ -103,7 +103,7 @@ pub fn carry() {
                         let resources = get_objects_by_prototype(prototypes::RESOURCE);
                         let mut resource_energy: Vec<Resource> = Vec::new();
                         for resource in resources {
-                            if resource.resource_type() == ResourceType::Energy {
+                            if resource.resource_type() == Energy {
                                 resource_energy.push(resource);
                             }
                         }
@@ -122,12 +122,12 @@ pub fn carry() {
                         carrier.move_to(carrier_container_closest.unwrap().as_ref(), None);
                         let capacity: u32 = carrier
                             .store()
-                            .get_free_capacity(Some(ResourceType::Energy))
+                            .get_free_capacity(Some(Energy))
                             as u32;
                         for num in 0..full_containers.len() {
                             if carrier.withdraw(
                                 &full_containers[num],
-                                ResourceType::Energy,
+                                Energy,
                                 Some(capacity),
                             ) == ReturnCode::NotInRange
                             {
@@ -142,12 +142,12 @@ pub fn carry() {
                             carrier.move_to(carrier_extension_closest.unwrap().as_ref(), None);
                             let capacity: u32 = carrier
                                 .store()
-                                .get_used_capacity(Some(ResourceType::Energy))
+                                .get_used_capacity(Some(Energy))
                                 as u32;
                             for num in 0..my_free_extensions.len() {
                                 if carrier.transfer(
                                     &my_free_extensions[num],
-                                    ResourceType::Energy,
+                                    Energy,
                                     Some(capacity),
                                 ) == ReturnCode::NotInRange
                                 {
@@ -158,11 +158,11 @@ pub fn carry() {
                         carrier.move_to(my_spawn.clone().unwrap().as_ref(), None);
                         let capacity: u32 = carrier
                             .store()
-                            .get_used_capacity(Some(ResourceType::Energy))
+                            .get_used_capacity(Some(Energy))
                             as u32;
                         carrier.transfer(
                             &my_spawn.clone().unwrap(),
-                            ResourceType::Energy,
+                            Energy,
                             Some(capacity),
                         );
                     }

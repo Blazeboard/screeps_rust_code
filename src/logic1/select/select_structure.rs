@@ -6,9 +6,10 @@ use screeps_arena::{
     constants::prototypes,
     game::utils::{self, get_objects_by_prototype},
     prelude::*,
-    Creep, Part, Resource, ResourceType, ReturnCode, StructureContainer, StructureExtension,
+    Creep, Part, Resource, ResourceType::Energy, ReturnCode, StructureContainer, StructureExtension,
     StructureSpawn,
 };
+use wasm_bindgen::JsCast;
 
 pub fn select_my_spawn() -> Option<StructureSpawn> {
     let spawns = get_objects_by_prototype(prototypes::STRUCTURE_SPAWN);
@@ -28,7 +29,7 @@ pub fn select_full_containers() -> Option<Vec<StructureContainer>> {
         for container in containers {
             if container
                 .store()
-                .get_used_capacity(Some(ResourceType::Energy))
+                .get_used_capacity(Some(Energy))
                 > 0
             {
                 full_containers.push(container);
@@ -52,7 +53,7 @@ pub fn select_free_extensions() -> Option<Vec<StructureExtension>> {
             if extension.my().unwrap_or(false)
                 && extension
                     .store()
-                    .get_free_capacity(Some(ResourceType::Energy))
+                    .get_free_capacity(Some(Energy))
                     > 0
             {
                 my_free_extensions.push(extension);
@@ -76,12 +77,9 @@ pub fn select_out_containers() -> Option<Vec<StructureContainer>> {
         for container in containers {
             if container
                 .store()
-                .get_used_capacity(Some(ResourceType::Energy))
+                .get_used_capacity(Some(Energy))
                 > 0
-                && match container.x().checked_sub(my_spawn.x()) {
-                    Some(x) => x,
-                    None => my_spawn.x() - container.x(),
-                } > 7
+                && utils::get_range(my_spawn.unchecked_ref(), container.unchecked_ref()) > 8
             {
                 out_containers.push(container);
             }
