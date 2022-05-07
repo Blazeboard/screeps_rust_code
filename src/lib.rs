@@ -10,6 +10,7 @@ use logic1::*;
 
 mod logging;
 mod logic1;
+mod utils;
 
 fn setup() {
     logging::setup_logging(logging::Info);
@@ -40,13 +41,14 @@ pub fn tick() {
         // warn!("spawns {}", spawns.len());
         for spawn in spawns {
             if spawn.my().unwrap_or(false) {
-                spawn.spawn_creep(&dropper_body);
+                spawn.spawn_creep(&carrier_body);
             } else {
                 enemy_spawn = Some(spawn);
             }
         }
 
-        drop::drop();
+        carry::carry();
+        // drop::drop()
         
         // let mut carriers_not_none = Vec::new();
         // for carrier in &carriers {

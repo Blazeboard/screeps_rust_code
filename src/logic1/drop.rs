@@ -1,13 +1,9 @@
-use js_sys::Array;
+use screeps_arena::ResourceType::Energy;
 
-use screeps_arena::{
-    prelude::*, ResourceType::Energy, ReturnCode,
-};
-use wasm_bindgen::JsCast;
-
-use super::select::{
-    select_creeps::select_droppers,
-    select_structure::{select_out_containers},
+use crate::utils::{
+    find::find_closest_by_range,
+    move_to_do::move_to_withdraw,
+    select::{select_creeps::select_droppers, select_structure::select_out_containers},
 };
 
 pub fn drop() {
@@ -16,36 +12,11 @@ pub fn drop() {
         let droppers = droppers.unwrap();
         if droppers.len() > 0 {
             for dropper in droppers {
-                if dropper
-                    .store()
-                    .get_free_capacity(Some(Energy))
-                    > 0
-                {
+                if dropper.store().get_free_capacity(Some(Energy)) > 0 {
                     let out_containers = select_out_containers();
-                    if out_containers.is_some() {
-                        let out_containers = out_containers.unwrap();
-                        let out_containers_array = Array::new();
-                        for out_container in out_containers {
-                            out_containers_array.push(&out_container);
-                        }
-                        let dropper_out_containers_closest =
-                            dropper.find_closest_by_range(&out_containers_array);
-                        let capacity = dropper
-                            .store()
-                            .get_free_capacity(Some(Energy))
-                            as u32;
-                        if dropper.withdraw(
-                            dropper_out_containers_closest
-                                .as_ref()
-                                .unwrap()
-                                .unchecked_ref(),
-                            Energy,
-                            Some(capacity),
-                        ) == ReturnCode::NotInRange
-                        {
-                            dropper.move_to(dropper_out_containers_closest.unwrap().as_ref(), None);
-                        }
-                    }
+                    let dropper_out_containers_closest =
+                        find_closest_by_range(dropper.as_ref(), &out_containers);
+                    move_to_withdraw(&dropper, &dropper_out_containers_closest);
                 } else {
                     let capacity = dropper.store().get_capacity(Some(Energy));
                     dropper.drop(Energy, Some(capacity));
