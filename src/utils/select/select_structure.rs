@@ -71,12 +71,14 @@ pub fn select_free_extensions() -> Option<Vec<GameObject>> {
 
 pub fn select_out_containers() -> Option<Vec<GameObject>> {
     let my_spawn = select_my_spawn().unwrap();
+    let enemy_spawn = select_enemy_spawn().unwrap();
     let containers = get_objects_by_prototype(prototypes::STRUCTURE_CONTAINER);
     if !containers.is_empty() {
         let mut out_containers: Vec<GameObject> = Vec::new();
         for container in containers {
             if container.store().get_used_capacity(Some(Energy)) > 0
                 && utils::get_range(my_spawn.unchecked_ref(), container.unchecked_ref()) > 8
+                && utils::get_range(enemy_spawn.unchecked_ref(), container.unchecked_ref()) > 8
             {
                 out_containers.push(container.into());
             }

@@ -1,4 +1,4 @@
-use screeps_arena::{constants::prototypes, game::utils::get_objects_by_prototype, Creep, Part};
+use screeps_arena::{constants::prototypes, game::utils::get_objects_by_prototype, Creep, Part, GameObject};
 
 pub fn select_my_injured_creeps() -> Option<Vec<Creep>> {
     let creeps = get_objects_by_prototype(prototypes::CREEP);
@@ -30,7 +30,7 @@ pub fn select_carriers() -> Option<Vec<Creep>> {
                 match body_part.part() {
                     Part::Carry => part_carry_num += 1,
                     Part::Move => part_move_num += 1,
-                    _ => break,
+                    _ => (),
                 }
             }
             if part_carry_num == 2 && part_move_num == 2 {
@@ -58,7 +58,7 @@ pub fn select_droppers() -> Option<Vec<Creep>> {
                 match body_part.part() {
                     Part::Carry => part_carry_num += 1,
                     Part::Move => part_move_num += 1,
-                    _ => break,
+                    _ => (),
                 }
             }
             if part_carry_num == 3 && part_move_num == 1 {
@@ -88,7 +88,7 @@ pub fn select_workers() -> Option<Vec<Creep>> {
                     Part::Work => part_work_num += 1,
                     Part::Carry => part_carry_num += 1,
                     Part::Move => part_move_num += 1,
-                    _ => break,
+                    _ => (),
                 }
             }
             if part_work_num == 3 && part_carry_num == 4 && part_move_num == 6 {
@@ -118,7 +118,7 @@ pub fn select_mages() -> Option<Vec<Creep>> {
                     Part::Move => part_move_num += 1,
                     Part::RangedAttack => part_ranged_attack_num += 1,
                     Part::Heal => part_heal_num += 1,
-                    _ => break,
+                    _ => (),
                 }
             }
             if part_move_num == 6 && part_ranged_attack_num == 3 && part_heal_num == 1 {
@@ -135,13 +135,39 @@ pub fn select_mages() -> Option<Vec<Creep>> {
     }
 }
 
-pub fn select_enemy_creeps() -> Option<Vec<Creep>> {
+pub fn select_ers() -> Option<Vec<Creep>> {
+    let creeps = get_objects_by_prototype(prototypes::CREEP);
+    if !creeps.is_empty() {
+        let mut ers = Vec::new();
+        for creep in creeps {
+            let mut part_tough_num = 0;
+            for body_part in creep.body() {
+                match body_part.part() {
+                    Part::Tough => part_tough_num += 1,
+                    _ => (),
+                }
+            }
+            if part_tough_num == 1 {
+                ers.push(creep);
+            }
+        }
+        if !ers.is_empty() {
+            Some(ers)
+        } else {
+            None
+        }
+    } else {
+        None
+    }
+}
+
+pub fn select_enemy_creeps() -> Option<Vec<GameObject>> {
     let creeps = get_objects_by_prototype(prototypes::CREEP);
     if !creeps.is_empty() {
         let mut enemy_creeps = Vec::new();
         for creep in creeps {
             if !creep.my() {
-                enemy_creeps.push(creep);
+                enemy_creeps.push(creep.into());
             }
         }
         if !enemy_creeps.is_empty() {
