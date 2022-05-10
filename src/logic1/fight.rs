@@ -1,16 +1,12 @@
-use std::collections::HashMap;
-
-use js_sys::{Array, Map};
+use js_sys::Map;
 
 use screeps_arena::{
     game::{
         pathfinder::{CostMatrix, FindPathOptions},
-        utils::{self, find_in_range, find_path, get_direction, get_ticks},
+        utils::{self, find_path, get_direction, get_ticks},
     },
     prelude::*,
-    Creep, Direction, GameObject,
-    ResourceType::Energy,
-    ReturnCode, StructureExtension, StructureSpawn,
+    Creep, Direction, GameObject, StructureExtension, StructureSpawn, StructureTower,
 };
 use wasm_bindgen::{JsCast, JsValue};
 
@@ -21,7 +17,7 @@ use crate::utils::{
         select_creeps::{self, select_my_creeps_not_me},
         select_structure,
     },
-    utils::{is_near_to_teammates, set_obstacles},
+    utils::{find_lowest_hits_from_array, is_near_to_teammates, set_obstacles},
 };
 
 pub fn fight((is_close, wall_line): (bool, u8)) {
@@ -34,7 +30,7 @@ pub fn fight((is_close, wall_line): (bool, u8)) {
     let my_injured_creeps = select_creeps::select_my_injured_creeps();
 
     let my_spawn_enemy_creeps_closest = find::find_closest_by_range(&my_spawn, &enemy_creeps);
-    let mut team_position = Map::new();
+    let team_position = Map::new();
     let mut costs = CostMatrix::new();
     let mut team_leader_go_direction: Option<Direction> = None;
 
@@ -63,14 +59,14 @@ pub fn fight((is_close, wall_line): (bool, u8)) {
 
     // 组队
     if mages.is_some() && enemy_creeps.is_some() {
-        let mages = mages.unwrap();
+        let mages = mages.as_ref().unwrap();
         if mages.len() >= 2 {
             for mage in mages {
                 let mage_enemy_creeps_in_3_range = find_in_x_range(mage.as_ref(), &enemy_creeps, 3);
                 let teammates = select_my_creeps_not_me(&mage);
                 if mage_enemy_creeps_in_3_range.is_some() && is_near_to_teammates(&mage, &teammates)
                 {
-                    team_map.push((mage, false));
+                    team_map.push((mage.clone(), false));
                 }
             }
 
@@ -360,6 +356,173 @@ pub fn fight((is_close, wall_line): (bool, u8)) {
     }
 
     // 战斗逻辑
-    // TODO
+    if mages.is_some() {
+        let mages = mages.unwrap();
+        for mage in &mages {
+            if enemy_creeps.is_some() && (enemy_extensions.is_some() || enemy_towers.is_some()) {
+                let mage_enemy_creeps_closest = find::find_closest_by_range(&mage, &enemy_creeps);
+                let mage_enemy_creeps_in_3_range = find::find_in_x_range(&mage, &enemy_creeps, 3);
+                let mage_enemy_creeps_in_3_range_lowest_hits =
+                    find_lowest_hits_from_array(mage_enemy_creeps_in_3_range);
+                let mage_enemy_towers_closest = find::find_closest_by_range(&mage, &enemy_towers);
+                let mage_enemy_extensions_closest =
+                    find::find_closest_by_range(&mage, &enemy_extensions);
+                if utils::get_range(
+                    mage.unchecked_ref(),
+                    mage_enemy_creeps_closest.as_ref().unwrap().unchecked_ref(),
+                ) <= 3
+                    && utils::get_range(
+                        mage.unchecked_ref(),
+                        mage_enemy_creeps_closest.as_ref().unwrap().unchecked_ref(),
+                    ) >= 2
+                    && utils::get_range(mage.unchecked_ref(), enemy_spawn.unchecked_ref()) > 1
+                {
+                    mage.ranged_attack(mage_enemy_creeps_in_3_range_lowest_hits.as_ref().unwrap());
 
+                    let mage_my_injured_creeps_in_1_range =
+                        find::find_in_x_range(mage.as_ref(), &my_injured_creeps, 1);
+                    if mage_my_injured_creeps_in_1_range.is_some() {
+                        let mage_my_injured_creeps_in_1_range_lowest_hits =
+                            find_lowest_hits_from_array(mage_my_injured_creeps_in_1_range).unwrap();
+                        mage.heal(&mage_my_injured_creeps_in_1_range_lowest_hits);
+                    } else {
+                        mage.heal(mage);
+                    }
+                } else if utils::get_range(
+                    mage.unchecked_ref(),
+                    mage_enemy_creeps_closest.as_ref().unwrap().unchecked_ref(),
+                ) <= 1
+                    && utils::get_range(mage.unchecked_ref(), enemy_spawn.unchecked_ref()) > 1
+                {
+                    mage.ranged_mass_attack();
+
+                    let mage_my_injured_creeps_in_1_range =
+                        find::find_in_x_range(mage.as_ref(), &my_injured_creeps, 1);
+                    if mage_my_injured_creeps_in_1_range.is_some() {
+                        let mage_my_injured_creeps_in_1_range_lowest_hits =
+                            find_lowest_hits_from_array(mage_my_injured_creeps_in_1_range).unwrap();
+                        mage.heal(&mage_my_injured_creeps_in_1_range_lowest_hits);
+                    } else {
+                        mage.heal(mage);
+                    }
+                } else if enemy_towers.is_some() {
+                    if utils::get_range(
+                        mage.unchecked_ref(),
+                        mage_enemy_towers_closest.as_ref().unwrap().unchecked_ref(),
+                    ) <= 1
+                    {
+                        mage.ranged_mass_attack();
+                    } else if utils::get_range(
+                        mage.unchecked_ref(),
+                        mage_enemy_towers_closest.as_ref().unwrap().unchecked_ref(),
+                    ) <= 3
+                    {
+                        mage.ranged_attack(
+                            mage_enemy_towers_closest
+                                .as_ref()
+                                .unwrap()
+                                .unchecked_ref::<StructureTower>(),
+                        );
+                    }
+
+                    let mage_my_injured_creeps_in_1_range =
+                        find::find_in_x_range(mage.as_ref(), &my_injured_creeps, 1);
+                    if mage_my_injured_creeps_in_1_range.is_some() {
+                        let mage_my_injured_creeps_in_1_range_lowest_hits =
+                            find_lowest_hits_from_array(mage_my_injured_creeps_in_1_range).unwrap();
+                        mage.heal(&mage_my_injured_creeps_in_1_range_lowest_hits);
+                    } else {
+                        mage.heal(mage);
+                    }
+                } else if utils::get_range(mage.unchecked_ref(), enemy_spawn.unchecked_ref()) <= 3 {
+                    if utils::get_range(mage.unchecked_ref(), enemy_spawn.unchecked_ref()) <= 1 {
+                        mage.ranged_mass_attack();
+                    } else if utils::get_range(mage.unchecked_ref(), enemy_spawn.unchecked_ref())
+                        <= 3
+                    {
+                        mage.ranged_attack(enemy_spawn.unchecked_ref::<StructureSpawn>());
+                    }
+
+                    let mage_my_injured_creeps_in_1_range =
+                        find::find_in_x_range(mage.as_ref(), &my_injured_creeps, 1);
+                    if mage_my_injured_creeps_in_1_range.is_some() {
+                        let mage_my_injured_creeps_in_1_range_lowest_hits =
+                            find_lowest_hits_from_array(mage_my_injured_creeps_in_1_range).unwrap();
+                        mage.heal(&mage_my_injured_creeps_in_1_range_lowest_hits);
+                    } else {
+                        mage.heal(mage);
+                    }
+                } else if enemy_extensions.is_some() {
+                    if utils::get_range(
+                        mage.unchecked_ref(),
+                        mage_enemy_extensions_closest
+                            .as_ref()
+                            .unwrap()
+                            .unchecked_ref(),
+                    ) <= 1
+                    {
+                        mage.ranged_mass_attack();
+                    } else if utils::get_range(
+                        mage.unchecked_ref(),
+                        mage_enemy_extensions_closest
+                            .as_ref()
+                            .unwrap()
+                            .unchecked_ref(),
+                    ) <= 3
+                    {
+                        mage.ranged_attack(
+                            mage_enemy_extensions_closest
+                                .as_ref()
+                                .unwrap()
+                                .unchecked_ref::<StructureExtension>(),
+                        );
+                    }
+
+                    let mage_my_injured_creeps_in_1_range =
+                        find::find_in_x_range(mage.as_ref(), &my_injured_creeps, 1);
+                    if mage_my_injured_creeps_in_1_range.is_some() {
+                        let mage_my_injured_creeps_in_1_range_lowest_hits =
+                            find_lowest_hits_from_array(mage_my_injured_creeps_in_1_range).unwrap();
+                        mage.heal(&mage_my_injured_creeps_in_1_range_lowest_hits);
+                    } else {
+                        mage.heal(mage);
+                    }
+                } else {
+                    let mage_my_injured_creeps_in_1_range =
+                        find::find_in_x_range(mage.as_ref(), &my_injured_creeps, 1);
+                    let mage_my_injured_creeps_in_3_range =
+                        find::find_in_x_range(mage.as_ref(), &my_injured_creeps, 3);
+                    if mage_my_injured_creeps_in_1_range.is_some() {
+                        let mage_my_injured_creeps_in_1_range_lowest_hits =
+                            find_lowest_hits_from_array(mage_my_injured_creeps_in_1_range).unwrap();
+                        mage.heal(&mage_my_injured_creeps_in_1_range_lowest_hits);
+                    } else if mage_my_injured_creeps_in_3_range.is_some() {
+                        let mage_my_injured_creeps_in_3_range_lowest_hits =
+                            find_lowest_hits_from_array(mage_my_injured_creeps_in_3_range).unwrap();
+                        mage.heal(&mage_my_injured_creeps_in_3_range_lowest_hits);
+                    } else {
+                        mage.heal(mage);
+                    }
+                }
+            } else {
+                if utils::get_range(mage.unchecked_ref(), enemy_spawn.unchecked_ref()) <= 3 {
+                    if utils::get_range(mage.unchecked_ref(), enemy_spawn.unchecked_ref()) <= 1 {
+                        mage.ranged_mass_attack();
+                    }
+                } else if utils::get_range(mage.unchecked_ref(), enemy_spawn.unchecked_ref()) <= 3 {
+                    mage.ranged_attack(enemy_spawn.unchecked_ref::<StructureSpawn>());
+                }
+
+                let mage_my_injured_creeps_in_1_range =
+                    find::find_in_x_range(mage.as_ref(), &my_injured_creeps, 1);
+                if mage_my_injured_creeps_in_1_range.is_some() {
+                    let mage_my_injured_creeps_in_1_range_lowest_hits =
+                        find_lowest_hits_from_array(mage_my_injured_creeps_in_1_range).unwrap();
+                    mage.heal(&mage_my_injured_creeps_in_1_range_lowest_hits);
+                } else {
+                    mage.heal(mage);
+                }
+            }
+        }
+    }
 }

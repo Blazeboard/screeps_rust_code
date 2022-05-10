@@ -1,12 +1,12 @@
 use screeps_arena::{constants::prototypes, game::utils::get_objects_by_prototype, Creep, Part, GameObject};
 
-pub fn select_my_injured_creeps() -> Option<Vec<Creep>> {
+pub fn select_my_injured_creeps() -> Option<Vec<GameObject>> {
     let creeps = get_objects_by_prototype(prototypes::CREEP);
     if !creeps.is_empty() {
         let mut my_injured_creeps = Vec::new();
         for creep in creeps {
             if creep.my() && creep.hits() < creep.hits_max() {
-                my_injured_creeps.push(creep);
+                my_injured_creeps.push(creep.into());
             }
         }
         if !my_injured_creeps.is_empty() {
