@@ -19,6 +19,54 @@ pub fn select_my_injured_creeps() -> Option<Vec<Creep>> {
     }
 }
 
+pub fn select_my_creeps_not_me(me: &Creep) -> Option<Vec<GameObject>> {
+    let creeps = get_objects_by_prototype(prototypes::CREEP);
+    if !creeps.is_empty() {
+        let mut not_me_creeps = Vec::new();
+        for creep in creeps {
+            if creep.my() && creep.id() != me.id() {
+                not_me_creeps.push(creep.into());
+            }
+        }
+        if !not_me_creeps.is_empty() {
+            Some(not_me_creeps)
+        } else {
+            None
+        }
+    } else {
+        None
+    }
+}
+
+pub fn select_my_creeps_not_in_team(team: &Vec<(Creep, bool)>) -> Option<Vec<Creep>> {
+    let creeps = get_objects_by_prototype(prototypes::CREEP);
+    if !creeps.is_empty() {
+        let mut not_in_team_creeps = Vec::new();
+        for creep in creeps {
+            if creep.my() && {
+                let mut baz: bool = true;
+                for x in team {
+                    if x.0.id() == creep.id() {
+                        baz = false
+                    } else {
+                        baz = true
+                    }
+                }
+                baz
+            } {
+                not_in_team_creeps.push(creep);
+            }
+        }
+        if !not_in_team_creeps.is_empty() {
+            Some(not_in_team_creeps)
+        } else {
+            None
+        }
+    } else {
+        None
+    }
+}
+
 pub fn select_carriers() -> Option<Vec<Creep>> {
     let creeps = get_objects_by_prototype(prototypes::CREEP);
     if !creeps.is_empty() {
