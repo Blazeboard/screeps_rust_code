@@ -28,12 +28,8 @@ pub fn carry() {
                     } else {
                         let carrier_extension_closest =
                             find_closest_by_range(carrier.as_ref(), &my_free_extensions);
-                        if move_to_transfer(
-                            &carrier,
-                            &carrier_extension_closest,
-                            "extension",
-                        )
-                        .unwrap_or(Action::Did)
+                        if move_to_transfer(&carrier, &carrier_extension_closest, "extension")
+                            .unwrap_or(Action::Did)
                             == Action::Did
                         {
                             move_to_transfer(&carrier, &my_spawn, "spawn");
@@ -59,12 +55,8 @@ pub fn carry() {
                     } else {
                         let carrier_extension_closest =
                             find_closest_by_range(carrier.as_ref(), &my_free_extensions);
-                        if move_to_transfer(
-                            &carrier,
-                            &carrier_extension_closest,
-                            "extension",
-                        )
-                        .unwrap_or(Action::Did)
+                        if move_to_transfer(&carrier, &carrier_extension_closest, "extension")
+                            .unwrap_or(Action::Did)
                             == Action::Did
                         {
                             move_to_transfer(&carrier, &my_spawn, "spawn");

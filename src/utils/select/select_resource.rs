@@ -1,5 +1,5 @@
 use screeps_arena::{
-    constants::prototypes, game::utils::get_objects_by_prototype, ResourceType::Energy, GameObject,
+    constants::prototypes, game::utils::get_objects_by_prototype, GameObject, ResourceType::Energy,
 };
 
 pub fn select_energy() -> Option<Vec<GameObject>> {

@@ -2,8 +2,8 @@ use screeps_arena::{
     constants::prototypes,
     game::utils::{self, get_objects_by_prototype},
     prelude::*,
-    ResourceType::Energy,
     GameObject,
+    ResourceType::Energy,
 };
 use wasm_bindgen::JsCast;
 

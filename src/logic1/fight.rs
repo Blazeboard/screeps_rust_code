@@ -1,4 +1,4 @@
-use js_sys::Map;
+use js_sys::{Map, Object};
 
 use screeps_arena::{
     game::{
@@ -39,21 +39,26 @@ pub fn fight((is_close, wall_line): (bool, u8)) {
     let mut team_map: Vec<(Creep, bool)> = Vec::new();
 
     // 设置集结点
+    let mut team_position_object = Object::new();
     if my_spawn.x() < 50 {
         if wall_line > my_spawn.y() {
             team_position.set(&JsValue::from("x"), &JsValue::from(my_spawn.x() + 2));
             team_position.set(&JsValue::from("y"), &JsValue::from(my_spawn.y() - 13));
+            team_position_object = Object::from_entries(team_position.as_ref()).unwrap();
         } else {
             team_position.set(&JsValue::from("x"), &JsValue::from(my_spawn.x() + 2));
             team_position.set(&JsValue::from("y"), &JsValue::from(my_spawn.y() + 13));
+            team_position_object = Object::from_entries(team_position.as_ref()).unwrap();
         }
     } else {
         if wall_line > my_spawn.y() {
             team_position.set(&JsValue::from("x"), &JsValue::from(my_spawn.x() - 2));
             team_position.set(&JsValue::from("y"), &JsValue::from(my_spawn.y() - 13));
+            team_position_object = Object::from_entries(team_position.as_ref()).unwrap();
         } else {
             team_position.set(&JsValue::from("x"), &JsValue::from(my_spawn.x() - 2));
             team_position.set(&JsValue::from("y"), &JsValue::from(my_spawn.y() + 13));
+            team_position_object = Object::from_entries(team_position.as_ref()).unwrap();
         }
     }
 
@@ -108,7 +113,7 @@ pub fn fight((is_close, wall_line): (bool, u8)) {
             let team_leader = &teammate.0;
             if get_ticks() < 260 {
                 // 260之后是战争状态
-                team_leader.move_to(&team_position, None);
+                team_leader.move_to(&team_position_object, None);
             } else {
                 if enemy_creeps.is_some() {
                     let team_leader_enemy_creeps_closest =
@@ -140,8 +145,15 @@ pub fn fight((is_close, wall_line): (bool, u8)) {
                             &JsValue::from("y"),
                             &JsValue::from(team_leader_team_leader_enemy_closest_path.path()[0].y),
                         );
-                        team_leader
-                            .move_to(&team_leader_team_leader_enemy_closest_path_js_map, None);
+                        let team_leader_team_leader_enemy_closest_path_js_map_object =
+                            Object::from_entries(
+                                team_leader_team_leader_enemy_closest_path_js_map.as_ref(),
+                            )
+                            .unwrap();
+                        team_leader.move_to(
+                            &team_leader_team_leader_enemy_closest_path_js_map_object,
+                            None,
+                        );
 
                         team_leader_go_direction = Some(get_direction(
                             team_leader_team_leader_enemy_closest_path.path()[0].x
@@ -193,8 +205,15 @@ pub fn fight((is_close, wall_line): (bool, u8)) {
                             &JsValue::from("y"),
                             &JsValue::from(team_leader_team_leader_enemy_closest_path.path()[0].y),
                         );
-                        team_leader
-                            .move_to(&team_leader_team_leader_enemy_closest_path_js_map, None);
+                        let team_leader_team_leader_enemy_closest_path_js_map_object =
+                            Object::from_entries(
+                                team_leader_team_leader_enemy_closest_path_js_map.as_ref(),
+                            )
+                            .unwrap();
+                        team_leader.move_to(
+                            &team_leader_team_leader_enemy_closest_path_js_map_object,
+                            None,
+                        );
 
                         team_leader_go_direction = Some(get_direction(
                             team_leader_team_leader_enemy_closest_path.path()[0].x
@@ -216,7 +235,7 @@ pub fn fight((is_close, wall_line): (bool, u8)) {
     for teammate in &team_map {
         if teammate.1 == false {
             if get_ticks() < 260 {
-                teammate.0.move_to(team_position.as_ref(), None);
+                teammate.0.move_to(team_position_object.as_ref(), None);
             } else {
                 if team_leader_go_direction.is_some() {
                     teammate.0.move_direction(team_leader_go_direction.unwrap());
@@ -231,7 +250,7 @@ pub fn fight((is_close, wall_line): (bool, u8)) {
         let mates = mates.as_ref().unwrap();
         for mate in mates {
             if get_ticks() < 260 && !is_close {
-                mate.move_to(team_position.as_ref(), None);
+                mate.move_to(team_position_object.as_ref(), None);
             } else if get_ticks() >= 260 && !is_close {
                 if enemy_creeps.is_some() {
                     let mate_enemy_creeps_closest =
@@ -256,7 +275,12 @@ pub fn fight((is_close, wall_line): (bool, u8)) {
                             &JsValue::from("y"),
                             &JsValue::from(mate_mate_enemy_creeps_closest_path.path()[0].y),
                         );
-                        mate.move_to(&mate_mate_enemy_creeps_closest_path_js_map, None);
+                        let mate_mate_enemy_creeps_closest_path_js_map_object =
+                            Object::from_entries(
+                                mate_mate_enemy_creeps_closest_path_js_map.as_ref(),
+                            )
+                            .unwrap();
+                        mate.move_to(&mate_mate_enemy_creeps_closest_path_js_map_object, None);
                     } else if utils::get_range(
                         mate.unchecked_ref(),
                         mate_enemy_creeps_closest.as_ref().unwrap().unchecked_ref(),
@@ -289,7 +313,12 @@ pub fn fight((is_close, wall_line): (bool, u8)) {
                             &JsValue::from("y"),
                             &JsValue::from(mate_mate_enemy_creeps_closest_path.path()[0].y),
                         );
-                        mate.move_to(&mate_mate_enemy_creeps_closest_path_js_map, None);
+                        let mate_mate_enemy_creeps_closest_path_js_map_object =
+                            Object::from_entries(
+                                mate_mate_enemy_creeps_closest_path_js_map.as_ref(),
+                            )
+                            .unwrap();
+                        mate.move_to(&mate_mate_enemy_creeps_closest_path_js_map_object, None);
                     } else {
                         mate.move_to(enemy_spawn.as_ref(), None);
                     }
@@ -348,7 +377,12 @@ pub fn fight((is_close, wall_line): (bool, u8)) {
                             &JsValue::from("y"),
                             &JsValue::from(mate_mate_enemy_creeps_closest_path.path()[0].y),
                         );
-                        mate.move_to(&mate_mate_enemy_creeps_closest_path_js_map, None);
+                        let mate_mate_enemy_creeps_closest_path_js_map_object =
+                            Object::from_entries(
+                                mate_mate_enemy_creeps_closest_path_js_map.as_ref(),
+                            )
+                            .unwrap();
+                        mate.move_to(&mate_mate_enemy_creeps_closest_path_js_map_object, None);
                     }
                 }
             }

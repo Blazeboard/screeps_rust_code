@@ -41,7 +41,7 @@ pub fn find_in_x_range(
             Some(game_object_targets_array_in_range)
         } else {
             None
-        }        
+        }
     } else {
         None
     }

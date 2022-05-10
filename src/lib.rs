@@ -1,8 +1,9 @@
 use log::*;
 use screeps_arena::{
-    prelude::*,
+    constants::{prototypes, Part},
     game,
-    constants::{prototypes, Part}, ResourceType,
+    prelude::*,
+    ResourceType,
 };
 use wasm_bindgen::prelude::*;
 
@@ -40,7 +41,6 @@ pub fn tick() {
         carry::carry();
         drop::drop();
         work::work();
-        fight::fight(is_close, wall_line);
+        fight::fight((is_close, wall_line));
     }
-    
 }

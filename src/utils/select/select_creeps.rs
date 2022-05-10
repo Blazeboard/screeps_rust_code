@@ -1,4 +1,6 @@
-use screeps_arena::{constants::prototypes, game::utils::get_objects_by_prototype, Creep, Part, GameObject};
+use screeps_arena::{
+    constants::prototypes, game::utils::get_objects_by_prototype, Creep, GameObject, Part,
+};
 
 pub fn select_my_injured_creeps() -> Option<Vec<GameObject>> {
     let creeps = get_objects_by_prototype(prototypes::CREEP);

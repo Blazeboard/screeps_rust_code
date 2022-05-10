@@ -18,7 +18,6 @@ pub fn move_to_withdraw(creep: &Creep, target: &Option<GameObject>) -> Option<Ac
         {
             creep.move_to(target.as_ref().unwrap(), None);
             Some(Action::Moving)
-            
         } else {
             Some(Action::Did)
         }

@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use js_sys::{Map};
+use js_sys::{Map, Object};
 use log::warn;
 use screeps_arena::{
     constants::Part,
@@ -14,8 +14,6 @@ use crate::utils::{
     find::{self},
     select::{self},
 };
-
-
 
 pub fn spawn() -> (bool, u8) {
     // let mut is_close = false;
@@ -198,19 +196,15 @@ fn build_wall() -> u8 {
             for x in 1u8..13u8 {
                 // let x = x as f64;
                 let position = Map::new();
-                position.set(
-                    JsValue::from("x").as_ref(),
-                    JsValue::from(x).as_ref(),
-                );
-                position.set(
-                    JsValue::from("y").as_ref(),
-                    JsValue::from(y).as_ref(),
-                );
-                if get_terrain_at(position.as_ref()) != Terrain::Wall {
+                position.set(JsValue::from("x").as_ref(), JsValue::from(x).as_ref());
+                position.set(JsValue::from("y").as_ref(), JsValue::from(y).as_ref());
+                let position_object = Object::from_entries(position.as_ref()).unwrap();
+                if get_terrain_at(&position_object) != Terrain::Wall {
                     ys.push(y);
                 }
             }
         }
+        // warn!("{:?}", ys);
 
         // 找出出现次数最少的y
         // let ys_ord: Vec<u8> = ys.iter().map(|y| y.to_owned() as u8).collect();
@@ -225,6 +219,7 @@ fn build_wall() -> u8 {
                 hash_map.insert(y, 1);
             }
         }
+        // warn!("{:?}", hash_map);
         let mut hash_map_value: Vec<u8> = hash_map.clone().into_values().collect();
         hash_map_value.sort();
         let mut min_exist_ys: Vec<u8> = Vec::new();
@@ -233,6 +228,7 @@ fn build_wall() -> u8 {
                 min_exist_ys.push(kv.0);
             }
         }
+        // warn!("{:?}", min_exist_ys);
 
         // 在所有出现次数最少的y中，距离母巢最近的y作为墙
         wall_line_mut = min_exist_ys[0];
@@ -259,17 +255,19 @@ fn build_wall() -> u8 {
             // let x_f64 = x as f64;
             // let wall_line_mut_f64 = wall_line_mut as f64;
             let position = Map::new();
-            position.set(
-                JsValue::from("x").as_ref(),
-                JsValue::from(x).as_ref(),
-            );
+            position.set(JsValue::from("x").as_ref(), JsValue::from(x).as_ref());
             position.set(
                 JsValue::from("y").as_ref(),
                 JsValue::from(wall_line_mut).as_ref(),
             );
-            if get_terrain_at(position.as_ref()) != Terrain::Wall {
-                if create_construction_site(x, wall_line_mut, prototypes::STRUCTURE_WALL.prototype())
-                    .is_err()
+            let position_object = Object::from_entries(position.as_ref()).unwrap();
+            if get_terrain_at(&position_object) != Terrain::Wall {
+                if create_construction_site(
+                    x,
+                    wall_line_mut,
+                    prototypes::STRUCTURE_WALL.prototype(),
+                )
+                .is_err()
                 {
                     warn!("{}", "无法创建wall工地");
                 }
@@ -288,15 +286,10 @@ fn build_wall() -> u8 {
             for x in 86u8..98u8 {
                 // let x = x as f64;
                 let position = Map::new();
-                position.set(
-                    JsValue::from("x").as_ref(),
-                    JsValue::from(x).as_ref(),
-                );
-                position.set(
-                    JsValue::from("y").as_ref(),
-                    JsValue::from(y).as_ref(),
-                );
-                if get_terrain_at(position.as_ref()) != Terrain::Wall {
+                position.set(JsValue::from("x").as_ref(), JsValue::from(x).as_ref());
+                position.set(JsValue::from("y").as_ref(), JsValue::from(y).as_ref());
+                let position_object = Object::from_entries(position.as_ref()).unwrap();
+                if get_terrain_at(&position_object) != Terrain::Wall {
                     ys.push(y);
                 }
             }
@@ -349,17 +342,19 @@ fn build_wall() -> u8 {
             // let x_f64 = x as f64;
             // let wall_line_mut_f64 = wall_line_mut as f64;
             let position = Map::new();
-            position.set(
-                JsValue::from("x").as_ref(),
-                JsValue::from(x).as_ref(),
-            );
+            position.set(JsValue::from("x").as_ref(), JsValue::from(x).as_ref());
             position.set(
                 JsValue::from("y").as_ref(),
                 JsValue::from(wall_line_mut).as_ref(),
             );
-            if get_terrain_at(position.as_ref()) != Terrain::Wall {
-                if create_construction_site(x, wall_line_mut, prototypes::STRUCTURE_WALL.prototype())
-                    .is_err()
+            let position_object = Object::from_entries(position.as_ref()).unwrap();
+            if get_terrain_at(&position_object) != Terrain::Wall {
+                if create_construction_site(
+                    x,
+                    wall_line_mut,
+                    prototypes::STRUCTURE_WALL.prototype(),
+                )
+                .is_err()
                 {
                     warn!("{}", "无法创建wall工地");
                 }
