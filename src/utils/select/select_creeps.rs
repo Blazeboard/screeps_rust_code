@@ -40,15 +40,16 @@ pub fn select_my_creeps_not_me(me: &Creep) -> Option<Vec<GameObject>> {
     }
 }
 
-pub fn select_my_creeps_not_in_team(team: &Vec<(Creep, bool)>) -> Option<Vec<Creep>> {
-    let creeps = get_objects_by_prototype(prototypes::CREEP);
-    if !creeps.is_empty() {
-        let mut not_in_team_creeps = Vec::new();
-        for creep in creeps {
-            if creep.my() && {
+pub fn select_my_mages_not_in_team(team: &Vec<(Creep, bool)>) -> Option<Vec<Creep>> {
+    let mages = select_mages();
+    if mages.is_some() {
+        let mages = mages.unwrap();
+        let mut not_in_team_mages = Vec::new();
+        for mage in mages {
+            if mage.my() && {
                 let mut baz: bool = true;
                 for x in team {
-                    if x.0.id() == creep.id() {
+                    if x.0.id() == mage.id() {
                         baz = false
                     } else {
                         baz = true
@@ -56,11 +57,11 @@ pub fn select_my_creeps_not_in_team(team: &Vec<(Creep, bool)>) -> Option<Vec<Cre
                 }
                 baz
             } {
-                not_in_team_creeps.push(creep);
+                not_in_team_mages.push(mage);
             }
         }
-        if !not_in_team_creeps.is_empty() {
-            Some(not_in_team_creeps)
+        if !not_in_team_mages.is_empty() {
+            Some(not_in_team_mages)
         } else {
             None
         }
@@ -83,7 +84,7 @@ pub fn select_carriers() -> Option<Vec<Creep>> {
                     _ => (),
                 }
             }
-            if part_carry_num == 2 && part_move_num == 2 {
+            if part_carry_num == 2 && part_move_num == 2 && creep.my() {
                 carriers.push(creep);
             }
         }
@@ -111,7 +112,7 @@ pub fn select_droppers() -> Option<Vec<Creep>> {
                     _ => (),
                 }
             }
-            if part_carry_num == 3 && part_move_num == 1 {
+            if part_carry_num == 3 && part_move_num == 1 && creep.my() {
                 droppers.push(creep);
             }
         }
@@ -141,7 +142,7 @@ pub fn select_workers() -> Option<Vec<Creep>> {
                     _ => (),
                 }
             }
-            if part_work_num == 3 && part_carry_num == 4 && part_move_num == 6 {
+            if part_work_num == 3 && part_carry_num == 4 && part_move_num == 6 && creep.my() {
                 workers.push(creep);
             }
         }
@@ -171,7 +172,8 @@ pub fn select_mages() -> Option<Vec<Creep>> {
                     _ => (),
                 }
             }
-            if part_move_num == 6 && part_ranged_attack_num == 3 && part_heal_num == 1 {
+            if part_move_num == 6 && part_ranged_attack_num == 3 && part_heal_num == 1 && creep.my()
+            {
                 mages.push(creep);
             }
         }
@@ -197,7 +199,7 @@ pub fn select_ers() -> Option<Vec<Creep>> {
                     _ => (),
                 }
             }
-            if part_tough_num == 1 {
+            if part_tough_num == 1 && creep.my() {
                 ers.push(creep);
             }
         }

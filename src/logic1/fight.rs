@@ -245,7 +245,7 @@ pub fn fight((is_close, wall_line): (bool, u8)) {
     }
 
     // 非队员移动逻辑
-    let mates = select::select_creeps::select_my_creeps_not_in_team(&team_map);
+    let mates = select::select_creeps::select_my_mages_not_in_team(&team_map);
     if mates.is_some() {
         let mates = mates.as_ref().unwrap();
         for mate in mates {
