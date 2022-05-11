@@ -1,3 +1,4 @@
+use log::warn;
 use screeps_arena::{
     game::utils::{self},
     ResourceType::{self, Energy},
@@ -21,12 +22,13 @@ pub fn work() {
             if utils::get_ticks() <= 300 {
                 if my_construction_sites.is_some() {
                     // 建造逻辑
-                    if !worker.store().get_used_capacity(Some(ResourceType::Energy)) > 0 {
-                        let containers_in_home = select_structure::select_containers_in_home();
-
+                    if !(worker.store().get_used_capacity(Some(ResourceType::Energy)) > 0) {
+                        let containers_in_home = select_structure::select_containers_in_home();                        
                         let worker_container_in_home_closest =
                             find_closest_by_range(worker.as_ref(), &containers_in_home);
                         move_to_withdraw(&worker, &worker_container_in_home_closest);
+                        warn!("***{}", worker.store().get_used_capacity(Some(ResourceType::Energy)));
+                        warn!("***{}", worker.store().get(ResourceType::Energy).unwrap());
                     } else {
                         let worker_my_construction_sites_closest =
                             find_closest_by_range(worker.as_ref(), &my_construction_sites);
@@ -44,7 +46,7 @@ pub fn work() {
             } else {
                 if my_construction_sites.is_some() {
                     // 建造逻辑
-                    if !worker.store().get_used_capacity(Some(Energy)) > 0 {
+                    if !(worker.store().get_used_capacity(Some(Energy)) > 0) {
                         let worker_full_container_closest =
                             find_closest_by_range(worker.as_ref(), &full_containers);
                         let resource_energy = select_resource::select_energy();
