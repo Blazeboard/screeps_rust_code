@@ -4,7 +4,7 @@ use js_sys::{Map, Object};
 use log::warn;
 use screeps_arena::{
     constants::Part,
-    game::utils::{self, create_construction_site, get_terrain_at},
+    game::utils::{self, create_construction_site, get_terrain_at, get_ticks},
     prototypes::{self, PrototypeConstant},
     StructureSpawn, Terrain,
 };
@@ -18,10 +18,13 @@ use crate::utils::{
 pub fn spawn() -> (bool, u8) {
     // let mut is_close = false;
 
-    let wall_line_mut = build_wall();
-    build_rampart_for_spawn();
-    build_extensions();
-    build_towers();
+    let mut wall_line_mut: u8 = 0;
+    if get_ticks() == 1 {
+        wall_line_mut = build_wall();
+        build_rampart_for_spawn();
+        build_extensions();
+        build_towers();
+    }
 
     let my_spawn = select::select_structure::select_my_spawn()
         .unwrap()
@@ -72,56 +75,98 @@ pub fn spawn() -> (bool, u8) {
 
     // 出生顺序管理
     if utils::get_ticks() <= 500 {
-        if carriers.is_some() {
-            let carriers = carriers.unwrap();
-            if carriers.len() < 2 {
-                if my_spawn.spawn_creep(&carriers_body).is_err() {
-                    warn!("{}", "spawn carrier失败");
-                }
+        if carriers
+            .unwrap_or_else(|| {
+                warn!("{}", "carrier数量为零");
+                Vec::new()
+            })
+            .len()
+            < 2
+        {
+            // let carriers = carriers.unwrap();
+            match my_spawn.spawn_creep(&carriers_body) {
+                Ok(creep) => warn!("carrier: {}", creep.id()),
+                Err(err) => warn!("carrier: {:?}", err),
             }
-        } else if workers.is_some() {
-            let workers = workers.unwrap();
-            if workers.len() < 1 {
-                if my_spawn.spawn_creep(&workers_body).is_err() {
-                    warn!("{}", "spawn worker失败");
-                }
+        } else if workers
+            .unwrap_or_else(|| {
+                warn!("{}", "worker数量为零");
+                Vec::new()
+            })
+            .len()
+            < 1
+        {
+            // let workers = workers.unwrap();
+            match my_spawn.spawn_creep(&workers_body) {
+                Ok(creep) => warn!("worker: {}", creep.id()),
+                Err(err) => warn!("worker: {:?}", err),
             }
-        } else if droppers.is_some() {
-            let droppers = droppers.unwrap();
-            if droppers.len() < 1 {
-                if my_spawn.spawn_creep(&droppers_body).is_err() {
-                    warn!("{}", "spawn dropper失败");
-                }
+        } else if droppers
+            .unwrap_or_else(|| {
+                warn!("{}", "dropper数量为零");
+                Vec::new()
+            })
+            .len()
+            < 1
+        {
+            // let droppers = droppers.unwrap();
+            match my_spawn.spawn_creep(&droppers_body) {
+                Ok(creep) => warn!("dropper: {}", creep.id()),
+                Err(err) => warn!("dropper: {:?}", err),
             }
-        } else if ers.is_some() {
-            let ers = ers.unwrap();
-            if ers.len() < 1 {
-                if my_spawn.spawn_creep(&ers_body).is_err() {
-                    warn!("{}", "spawn er失败");
-                }
+        } else if ers
+            .unwrap_or_else(|| {
+                warn!("{}", "er数量为零");
+                Vec::new()
+            })
+            .len()
+            < 1
+        {
+            // let ers = ers.unwrap();
+            match my_spawn.spawn_creep(&ers_body) {
+                Ok(creep) => warn!("er: {}", creep.id()),
+                Err(err) => warn!("er: {:?}", err),
             }
-        } else if mages.is_some() {
-            let mages = mages.unwrap();
-            if mages.len() < 99 {
-                if my_spawn.spawn_creep(&mages_body).is_err() {
-                    warn!("{}", "spawn mage失败");
-                }
+        } else if mages
+            .unwrap_or_else(|| {
+                warn!("{}", "mage数量为零");
+                Vec::new()
+            })
+            .len()
+            < 99
+        {
+            // let mages = mages.unwrap();
+            match my_spawn.spawn_creep(&mages_body) {
+                Ok(creep) => warn!("mage: {}", creep.id()),
+                Err(err) => warn!("mage: {:?}", err),
             }
         }
     } else {
-        if carriers.is_some() {
-            let carriers = carriers.unwrap();
-            if carriers.len() < 2 {
-                if my_spawn.spawn_creep(&carriers_body).is_err() {
-                    warn!("{}", "spawn carrier失败");
-                }
+        if carriers
+            .unwrap_or_else(|| {
+                warn!("{}", "carrier数量为零");
+                Vec::new()
+            })
+            .len()
+            < 2
+        {
+            // let carriers = carriers.unwrap();
+            match my_spawn.spawn_creep(&carriers_body) {
+                Ok(creep) => warn!("carrier: {}", creep.id()),
+                Err(err) => warn!("carrier: {:?}", err),
             }
-        } else if mages.is_some() {
-            let mages = mages.unwrap();
-            if mages.len() < 99 {
-                if my_spawn.spawn_creep(&mages_body).is_err() {
-                    warn!("{}", "spawn mage失败");
-                }
+        } else if mages
+            .unwrap_or_else(|| {
+                warn!("{}", "mage数量为零");
+                Vec::new()
+            })
+            .len()
+            < 99
+        {
+            // let mages = mages.unwrap();
+            match my_spawn.spawn_creep(&mages_body) {
+                Ok(creep) => warn!("mage: {}", creep.id()),
+                Err(err) => warn!("mage: {:?}", err),
             }
         }
     }
@@ -262,14 +307,15 @@ fn build_wall() -> u8 {
             );
             let position_object = Object::from_entries(position.as_ref()).unwrap();
             if get_terrain_at(&position_object) != Terrain::Wall {
-                if create_construction_site(
+                match create_construction_site(
                     x,
                     wall_line_mut,
                     prototypes::STRUCTURE_WALL.prototype(),
-                )
-                .is_err()
-                {
-                    warn!("{}", "无法创建wall工地");
+                ) {
+                    Ok(construction_site) => {
+                        warn!("Wall: {}: {}", construction_site.x(), construction_site.y())
+                    }
+                    Err(err) => warn!("Wall: {:?}", err),
                 }
             }
         }
@@ -349,14 +395,15 @@ fn build_wall() -> u8 {
             );
             let position_object = Object::from_entries(position.as_ref()).unwrap();
             if get_terrain_at(&position_object) != Terrain::Wall {
-                if create_construction_site(
+                match create_construction_site(
                     x,
                     wall_line_mut,
                     prototypes::STRUCTURE_WALL.prototype(),
-                )
-                .is_err()
-                {
-                    warn!("{}", "无法创建wall工地");
+                ) {
+                    Ok(construction_site) => {
+                        warn!("Wall: {}: {}", construction_site.x(), construction_site.y())
+                    }
+                    Err(err) => warn!("Wall: {:?}", err),
                 }
             }
         }
@@ -369,14 +416,19 @@ fn build_towers() {
     if out_containers.is_some() {
         let out_containers = out_containers.unwrap();
         for out_container in out_containers {
-            if create_construction_site(
+            match create_construction_site(
                 out_container.x(),
                 out_container.y() - 1,
                 prototypes::STRUCTURE_TOWER.prototype(),
-            )
-            .is_err()
-            {
-                warn!("{}", "无法创建tower工地");
+            ) {
+                Ok(construction_site) => {
+                    warn!(
+                        "Tower: {}: {}",
+                        construction_site.x(),
+                        construction_site.y()
+                    )
+                }
+                Err(err) => warn!("Tower: {:?}", err),
             }
         }
     }
@@ -388,84 +440,124 @@ fn build_extensions() {
         if out_containers.is_some() {
             let out_containers = out_containers.unwrap();
             for out_container in out_containers {
-                if create_construction_site(
+                match create_construction_site(
                     out_container.x() - 3,
                     out_container.y() - 3,
                     prototypes::STRUCTURE_EXTENSION.prototype(),
-                )
-                .is_err()
-                {
-                    warn!("{}", "无法创建extension工地");
+                ) {
+                    Ok(construction_site) => {
+                        warn!(
+                            "Extension: {}: {}",
+                            construction_site.x(),
+                            construction_site.y()
+                        )
+                    }
+                    Err(err) => warn!("Extension: {:?}", err),
                 }
 
-                if create_construction_site(
+                match create_construction_site(
                     out_container.x() - 3,
                     out_container.y() + 3,
                     prototypes::STRUCTURE_EXTENSION.prototype(),
-                )
-                .is_err()
-                {
-                    warn!("{}", "无法创建extension工地");
+                ) {
+                    Ok(construction_site) => {
+                        warn!(
+                            "Extension: {}: {}",
+                            construction_site.x(),
+                            construction_site.y()
+                        )
+                    }
+                    Err(err) => warn!("Extension: {:?}", err),
                 }
 
-                if create_construction_site(
+                match create_construction_site(
                     out_container.x() - 3,
                     out_container.y(),
                     prototypes::STRUCTURE_EXTENSION.prototype(),
-                )
-                .is_err()
-                {
-                    warn!("{}", "无法创建extension工地");
+                ) {
+                    Ok(construction_site) => {
+                        warn!(
+                            "Extension: {}: {}",
+                            construction_site.x(),
+                            construction_site.y()
+                        )
+                    }
+                    Err(err) => warn!("Extension: {:?}", err),
                 }
 
-                if create_construction_site(
+                match create_construction_site(
                     out_container.x(),
                     out_container.y() - 3,
                     prototypes::STRUCTURE_EXTENSION.prototype(),
-                )
-                .is_err()
-                {
-                    warn!("{}", "无法创建extension工地");
+                ) {
+                    Ok(construction_site) => {
+                        warn!(
+                            "Extension: {}: {}",
+                            construction_site.x(),
+                            construction_site.y()
+                        )
+                    }
+                    Err(err) => warn!("Extension: {:?}", err),
                 }
 
-                if create_construction_site(
+                match create_construction_site(
                     out_container.x(),
                     out_container.y() + 3,
                     prototypes::STRUCTURE_EXTENSION.prototype(),
-                )
-                .is_err()
-                {
-                    warn!("{}", "无法创建extension工地");
+                ) {
+                    Ok(construction_site) => {
+                        warn!(
+                            "Extension: {}: {}",
+                            construction_site.x(),
+                            construction_site.y()
+                        )
+                    }
+                    Err(err) => warn!("Extension: {:?}", err),
                 }
 
-                if create_construction_site(
+                match create_construction_site(
                     out_container.x() + 3,
                     out_container.y() + 3,
                     prototypes::STRUCTURE_EXTENSION.prototype(),
-                )
-                .is_err()
-                {
-                    warn!("{}", "无法创建extension工地");
+                ) {
+                    Ok(construction_site) => {
+                        warn!(
+                            "Extension: {}: {}",
+                            construction_site.x(),
+                            construction_site.y()
+                        )
+                    }
+                    Err(err) => warn!("Extension: {:?}", err),
                 }
 
-                if create_construction_site(
+                match create_construction_site(
                     out_container.x() + 3,
                     out_container.y() - 3,
                     prototypes::STRUCTURE_EXTENSION.prototype(),
-                )
-                .is_err()
-                {
-                    warn!("{}", "无法创建extension工地");
+                ) {
+                    Ok(construction_site) => {
+                        warn!(
+                            "Extension: {}: {}",
+                            construction_site.x(),
+                            construction_site.y()
+                        )
+                    }
+                    Err(err) => warn!("Extension: {:?}", err),
                 }
 
-                if create_construction_site(
+                match create_construction_site(
                     out_container.x() + 3,
                     out_container.y(),
                     prototypes::STRUCTURE_EXTENSION.prototype(),
-                )
-                .is_err()
-                {
-                    warn!("{}", "无法创建extension工地");
+                ) {
+                    Ok(construction_site) => {
+                        warn!(
+                            "Extension: {}: {}",
+                            construction_site.x(),
+                            construction_site.y()
+                        )
+                    }
+                    Err(err) => warn!("Extension: {:?}", err),
                 }
             }
         }
@@ -474,13 +566,16 @@ fn build_extensions() {
 
 fn build_rampart_for_spawn() {
     let my_spawn = select::select_structure::select_my_spawn().unwrap();
-    if create_construction_site(
+    match create_construction_site(
         my_spawn.x(),
         my_spawn.y(),
         prototypes::STRUCTURE_RAMPART.prototype(),
-    )
-    .is_err()
-    {
-        warn!("{}", "无法创建城墙");
+    ) {
+        Ok(construction_site) => warn!(
+            "Rampart: {}: {}",
+            construction_site.x(),
+            construction_site.y()
+        ),
+        Err(err) => warn!("Rampart: {:?}", err),
     }
 }
