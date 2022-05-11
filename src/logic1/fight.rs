@@ -39,7 +39,7 @@ pub fn fight((is_close, wall_line): (bool, u8)) {
     let mut team_map: Vec<(Creep, bool)> = Vec::new();
 
     // 设置集结点
-    let mut team_position_object = Object::new();
+    let team_position_object;
     if my_spawn.x() < 50 {
         if wall_line > my_spawn.y() {
             team_position.set(&JsValue::from("x"), &JsValue::from(my_spawn.x() + 2));

@@ -1,13 +1,7 @@
-use log::*;
-use screeps_arena::{
-    constants::{prototypes, Part},
-    game,
-    prelude::*,
-    ResourceType,
-};
+use screeps_arena::game;
 use wasm_bindgen::prelude::*;
 
-use logic1::*;
+// extern crate console_error_panic_hook;
 
 mod logging;
 mod logic1;
