@@ -19,12 +19,12 @@ pub fn spawn() -> (bool, u8) {
     // let mut is_close = false;
 
     let mut wall_line_mut: u8 = 0;
-    if get_ticks() == 1 {
-        wall_line_mut = build_wall();
-        build_rampart_for_spawn();
-        build_extensions();
-        build_towers();
-    }
+    wall_line_mut = build_wall();
+    // warn!("wall_line_mut is {}", wall_line_mut);
+    build_rampart_for_spawn();
+    build_extensions();
+    build_towers();
+    // warn!("wall_line_mut is {}", wall_line_mut);
 
     let my_spawn = select::select_structure::select_my_spawn()
         .unwrap()
@@ -171,6 +171,7 @@ pub fn spawn() -> (bool, u8) {
         }
     }
 
+    // warn!("wall_line_mut is {}", wall_line_mut);
     if enemy_creeps.is_some() {
         if my_spawn.x() < 50 {
             if wall_line_mut > my_spawn.y() {
@@ -179,8 +180,10 @@ pub fn spawn() -> (bool, u8) {
                     && my_spawn_enemy_creeps_closest.as_ref().unwrap().y() >= my_spawn.y() - 45
                     && my_spawn_enemy_creeps_closest.as_ref().unwrap().y() <= wall_line_mut
                 {
+                    // warn!("wall_line_mut is {}", wall_line_mut);
                     (true, wall_line_mut)
                 } else {
+                    // warn!("wall_line_mut is {}", wall_line_mut);
                     (false, wall_line_mut)
                 }
             } else {
@@ -189,8 +192,10 @@ pub fn spawn() -> (bool, u8) {
                     && my_spawn_enemy_creeps_closest.as_ref().unwrap().y() >= wall_line_mut
                     && my_spawn_enemy_creeps_closest.as_ref().unwrap().y() <= my_spawn.y() + 54
                 {
+                    // warn!("wall_line_mut is {}", wall_line_mut);
                     (true, wall_line_mut)
                 } else {
+                    // warn!("wall_line_mut is {}", wall_line_mut);
                     (false, wall_line_mut)
                 }
             }
@@ -201,8 +206,10 @@ pub fn spawn() -> (bool, u8) {
                     && my_spawn_enemy_creeps_closest.as_ref().unwrap().y() >= my_spawn.y() - 54
                     && my_spawn_enemy_creeps_closest.as_ref().unwrap().y() <= wall_line_mut
                 {
+                    // warn!("wall_line_mut is {}", wall_line_mut);
                     (true, wall_line_mut)
                 } else {
+                    // warn!("wall_line_mut is {}", wall_line_mut);
                     (false, wall_line_mut)
                 }
             } else {
@@ -211,15 +218,19 @@ pub fn spawn() -> (bool, u8) {
                     && my_spawn_enemy_creeps_closest.as_ref().unwrap().y() >= wall_line_mut
                     && my_spawn_enemy_creeps_closest.as_ref().unwrap().y() <= my_spawn.y() + 45
                 {
+                    // warn!("wall_line_mut is {}", wall_line_mut);
                     (true, wall_line_mut)
                 } else {
+                    // warn!("wall_line_mut is {}", wall_line_mut);
                     (false, wall_line_mut)
                 }
             }
         } else {
+            // warn!("wall_line_mut is {}", wall_line_mut);
             (false, wall_line_mut)
         }
     } else {
+        // warn!("wall_line_mut is {}", wall_line_mut);
         (false, wall_line_mut)
     }
 }
@@ -284,6 +295,7 @@ fn build_wall() -> u8 {
                 .y()
                 .checked_sub(min_exist_y)
                 .unwrap_or(min_exist_y - my_spawn.as_ref().unwrap().y());
+            // warn!("my_spawn_to_min_exist_y is {}", my_spawn_to_min_exist_y);
             let my_spawn_to_wall_line_mut = my_spawn
                 .as_ref()
                 .unwrap()
@@ -296,26 +308,28 @@ fn build_wall() -> u8 {
         }
 
         // 安放建筑工地
-        for x in 1u8..13u8 {
-            // let x_f64 = x as f64;
-            // let wall_line_mut_f64 = wall_line_mut as f64;
-            let position = Map::new();
-            position.set(JsValue::from("x").as_ref(), JsValue::from(x).as_ref());
-            position.set(
-                JsValue::from("y").as_ref(),
-                JsValue::from(wall_line_mut).as_ref(),
-            );
-            let position_object = Object::from_entries(position.as_ref()).unwrap();
-            if get_terrain_at(&position_object) != Terrain::Wall {
-                match create_construction_site(
-                    x,
-                    wall_line_mut,
-                    prototypes::STRUCTURE_WALL.prototype(),
-                ) {
-                    Ok(construction_site) => {
-                        warn!("Wall: {}: {}", construction_site.x(), construction_site.y())
+        if get_ticks() == 1 {
+            for x in 1u8..13u8 {
+                // let x_f64 = x as f64;
+                // let wall_line_mut_f64 = wall_line_mut as f64;
+                let position = Map::new();
+                position.set(JsValue::from("x").as_ref(), JsValue::from(x).as_ref());
+                position.set(
+                    JsValue::from("y").as_ref(),
+                    JsValue::from(wall_line_mut).as_ref(),
+                );
+                let position_object = Object::from_entries(position.as_ref()).unwrap();
+                if get_terrain_at(&position_object) != Terrain::Wall {
+                    match create_construction_site(
+                        x,
+                        wall_line_mut,
+                        prototypes::STRUCTURE_WALL.prototype(),
+                    ) {
+                        Ok(construction_site) => {
+                            warn!("Wall: {}: {}", construction_site.x(), construction_site.y())
+                        }
+                        Err(err) => warn!("Wall: {:?}", err),
                     }
-                    Err(err) => warn!("Wall: {:?}", err),
                 }
             }
         }
@@ -384,26 +398,28 @@ fn build_wall() -> u8 {
         }
 
         // 安放建筑工地
-        for x in 86u8..98u8 {
-            // let x_f64 = x as f64;
-            // let wall_line_mut_f64 = wall_line_mut as f64;
-            let position = Map::new();
-            position.set(JsValue::from("x").as_ref(), JsValue::from(x).as_ref());
-            position.set(
-                JsValue::from("y").as_ref(),
-                JsValue::from(wall_line_mut).as_ref(),
-            );
-            let position_object = Object::from_entries(position.as_ref()).unwrap();
-            if get_terrain_at(&position_object) != Terrain::Wall {
-                match create_construction_site(
-                    x,
-                    wall_line_mut,
-                    prototypes::STRUCTURE_WALL.prototype(),
-                ) {
-                    Ok(construction_site) => {
-                        warn!("Wall: {}: {}", construction_site.x(), construction_site.y())
+        if get_ticks() == 1 {
+            for x in 86u8..98u8 {
+                // let x_f64 = x as f64;
+                // let wall_line_mut_f64 = wall_line_mut as f64;
+                let position = Map::new();
+                position.set(JsValue::from("x").as_ref(), JsValue::from(x).as_ref());
+                position.set(
+                    JsValue::from("y").as_ref(),
+                    JsValue::from(wall_line_mut).as_ref(),
+                );
+                let position_object = Object::from_entries(position.as_ref()).unwrap();
+                if get_terrain_at(&position_object) != Terrain::Wall {
+                    match create_construction_site(
+                        x,
+                        wall_line_mut,
+                        prototypes::STRUCTURE_WALL.prototype(),
+                    ) {
+                        Ok(construction_site) => {
+                            warn!("Wall: {}: {}", construction_site.x(), construction_site.y())
+                        }
+                        Err(err) => warn!("Wall: {:?}", err),
                     }
-                    Err(err) => warn!("Wall: {:?}", err),
                 }
             }
         }
@@ -412,152 +428,158 @@ fn build_wall() -> u8 {
 }
 
 fn build_towers() {
-    let out_containers = select::select_structure::select_out_containers();
-    if out_containers.is_some() {
-        let out_containers = out_containers.unwrap();
-        for out_container in out_containers {
-            match create_construction_site(
-                out_container.x(),
-                out_container.y() - 1,
-                prototypes::STRUCTURE_TOWER.prototype(),
-            ) {
-                Ok(construction_site) => {
-                    warn!(
-                        "Tower: {}: {}",
-                        construction_site.x(),
-                        construction_site.y()
-                    )
+    if get_ticks() == 1 {
+        let out_containers = select::select_structure::select_out_containers();
+        // warn!("out_container is some? {}", out_containers.is_some());
+        if out_containers.is_some() {
+            let out_containers = out_containers.unwrap();
+            // warn!("out_container's length: {}", out_containers.len());
+            for out_container in out_containers {
+                match create_construction_site(
+                    out_container.x(),
+                    out_container.y() - 1,
+                    prototypes::STRUCTURE_TOWER.prototype(),
+                ) {
+                    Ok(construction_site) => {
+                        warn!(
+                            "Tower: {}: {}",
+                            construction_site.x(),
+                            construction_site.y()
+                        )
+                    }
+                    Err(err) => warn!("Tower: {:?}", err),
                 }
-                Err(err) => warn!("Tower: {:?}", err),
             }
         }
     }
 }
 
 fn build_extensions() {
-    if utils::get_ticks() >= 240 {
-        let out_containers = select::select_structure::select_out_containers();
-        if out_containers.is_some() {
-            let out_containers = out_containers.unwrap();
-            for out_container in out_containers {
-                match create_construction_site(
-                    out_container.x() - 3,
-                    out_container.y() - 3,
-                    prototypes::STRUCTURE_EXTENSION.prototype(),
-                ) {
-                    Ok(construction_site) => {
-                        warn!(
-                            "Extension: {}: {}",
-                            construction_site.x(),
-                            construction_site.y()
-                        )
+    if get_ticks() == 1 {
+        if utils::get_ticks() >= 240 {
+            let out_containers = select::select_structure::select_out_containers();
+            if out_containers.is_some() {
+                let out_containers = out_containers.unwrap();
+                for out_container in out_containers {
+                    match create_construction_site(
+                        out_container.x() - 3,
+                        out_container.y() - 3,
+                        prototypes::STRUCTURE_EXTENSION.prototype(),
+                    ) {
+                        Ok(construction_site) => {
+                            warn!(
+                                "Extension: {}: {}",
+                                construction_site.x(),
+                                construction_site.y()
+                            )
+                        }
+                        Err(err) => warn!("Extension: {:?}", err),
                     }
-                    Err(err) => warn!("Extension: {:?}", err),
-                }
 
-                match create_construction_site(
-                    out_container.x() - 3,
-                    out_container.y() + 3,
-                    prototypes::STRUCTURE_EXTENSION.prototype(),
-                ) {
-                    Ok(construction_site) => {
-                        warn!(
-                            "Extension: {}: {}",
-                            construction_site.x(),
-                            construction_site.y()
-                        )
+                    match create_construction_site(
+                        out_container.x() - 3,
+                        out_container.y() + 3,
+                        prototypes::STRUCTURE_EXTENSION.prototype(),
+                    ) {
+                        Ok(construction_site) => {
+                            warn!(
+                                "Extension: {}: {}",
+                                construction_site.x(),
+                                construction_site.y()
+                            )
+                        }
+                        Err(err) => warn!("Extension: {:?}", err),
                     }
-                    Err(err) => warn!("Extension: {:?}", err),
-                }
 
-                match create_construction_site(
-                    out_container.x() - 3,
-                    out_container.y(),
-                    prototypes::STRUCTURE_EXTENSION.prototype(),
-                ) {
-                    Ok(construction_site) => {
-                        warn!(
-                            "Extension: {}: {}",
-                            construction_site.x(),
-                            construction_site.y()
-                        )
+                    match create_construction_site(
+                        out_container.x() - 3,
+                        out_container.y(),
+                        prototypes::STRUCTURE_EXTENSION.prototype(),
+                    ) {
+                        Ok(construction_site) => {
+                            warn!(
+                                "Extension: {}: {}",
+                                construction_site.x(),
+                                construction_site.y()
+                            )
+                        }
+                        Err(err) => warn!("Extension: {:?}", err),
                     }
-                    Err(err) => warn!("Extension: {:?}", err),
-                }
 
-                match create_construction_site(
-                    out_container.x(),
-                    out_container.y() - 3,
-                    prototypes::STRUCTURE_EXTENSION.prototype(),
-                ) {
-                    Ok(construction_site) => {
-                        warn!(
-                            "Extension: {}: {}",
-                            construction_site.x(),
-                            construction_site.y()
-                        )
+                    match create_construction_site(
+                        out_container.x(),
+                        out_container.y() - 3,
+                        prototypes::STRUCTURE_EXTENSION.prototype(),
+                    ) {
+                        Ok(construction_site) => {
+                            warn!(
+                                "Extension: {}: {}",
+                                construction_site.x(),
+                                construction_site.y()
+                            )
+                        }
+                        Err(err) => warn!("Extension: {:?}", err),
                     }
-                    Err(err) => warn!("Extension: {:?}", err),
-                }
 
-                match create_construction_site(
-                    out_container.x(),
-                    out_container.y() + 3,
-                    prototypes::STRUCTURE_EXTENSION.prototype(),
-                ) {
-                    Ok(construction_site) => {
-                        warn!(
-                            "Extension: {}: {}",
-                            construction_site.x(),
-                            construction_site.y()
-                        )
+                    match create_construction_site(
+                        out_container.x(),
+                        out_container.y() + 3,
+                        prototypes::STRUCTURE_EXTENSION.prototype(),
+                    ) {
+                        Ok(construction_site) => {
+                            warn!(
+                                "Extension: {}: {}",
+                                construction_site.x(),
+                                construction_site.y()
+                            )
+                        }
+                        Err(err) => warn!("Extension: {:?}", err),
                     }
-                    Err(err) => warn!("Extension: {:?}", err),
-                }
 
-                match create_construction_site(
-                    out_container.x() + 3,
-                    out_container.y() + 3,
-                    prototypes::STRUCTURE_EXTENSION.prototype(),
-                ) {
-                    Ok(construction_site) => {
-                        warn!(
-                            "Extension: {}: {}",
-                            construction_site.x(),
-                            construction_site.y()
-                        )
+                    match create_construction_site(
+                        out_container.x() + 3,
+                        out_container.y() + 3,
+                        prototypes::STRUCTURE_EXTENSION.prototype(),
+                    ) {
+                        Ok(construction_site) => {
+                            warn!(
+                                "Extension: {}: {}",
+                                construction_site.x(),
+                                construction_site.y()
+                            )
+                        }
+                        Err(err) => warn!("Extension: {:?}", err),
                     }
-                    Err(err) => warn!("Extension: {:?}", err),
-                }
 
-                match create_construction_site(
-                    out_container.x() + 3,
-                    out_container.y() - 3,
-                    prototypes::STRUCTURE_EXTENSION.prototype(),
-                ) {
-                    Ok(construction_site) => {
-                        warn!(
-                            "Extension: {}: {}",
-                            construction_site.x(),
-                            construction_site.y()
-                        )
+                    match create_construction_site(
+                        out_container.x() + 3,
+                        out_container.y() - 3,
+                        prototypes::STRUCTURE_EXTENSION.prototype(),
+                    ) {
+                        Ok(construction_site) => {
+                            warn!(
+                                "Extension: {}: {}",
+                                construction_site.x(),
+                                construction_site.y()
+                            )
+                        }
+                        Err(err) => warn!("Extension: {:?}", err),
                     }
-                    Err(err) => warn!("Extension: {:?}", err),
-                }
 
-                match create_construction_site(
-                    out_container.x() + 3,
-                    out_container.y(),
-                    prototypes::STRUCTURE_EXTENSION.prototype(),
-                ) {
-                    Ok(construction_site) => {
-                        warn!(
-                            "Extension: {}: {}",
-                            construction_site.x(),
-                            construction_site.y()
-                        )
+                    match create_construction_site(
+                        out_container.x() + 3,
+                        out_container.y(),
+                        prototypes::STRUCTURE_EXTENSION.prototype(),
+                    ) {
+                        Ok(construction_site) => {
+                            warn!(
+                                "Extension: {}: {}",
+                                construction_site.x(),
+                                construction_site.y()
+                            )
+                        }
+                        Err(err) => warn!("Extension: {:?}", err),
                     }
-                    Err(err) => warn!("Extension: {:?}", err),
                 }
             }
         }
@@ -565,17 +587,19 @@ fn build_extensions() {
 }
 
 fn build_rampart_for_spawn() {
-    let my_spawn = select::select_structure::select_my_spawn().unwrap();
-    match create_construction_site(
-        my_spawn.x(),
-        my_spawn.y(),
-        prototypes::STRUCTURE_RAMPART.prototype(),
-    ) {
-        Ok(construction_site) => warn!(
-            "Rampart: {}: {}",
-            construction_site.x(),
-            construction_site.y()
-        ),
-        Err(err) => warn!("Rampart: {:?}", err),
+    if get_ticks() == 1 {
+        let my_spawn = select::select_structure::select_my_spawn().unwrap();
+        match create_construction_site(
+            my_spawn.x(),
+            my_spawn.y(),
+            prototypes::STRUCTURE_RAMPART.prototype(),
+        ) {
+            Ok(construction_site) => warn!(
+                "Rampart: {}: {}",
+                construction_site.x(),
+                construction_site.y()
+            ),
+            Err(err) => warn!("Rampart: {:?}", err),
+        }
     }
 }

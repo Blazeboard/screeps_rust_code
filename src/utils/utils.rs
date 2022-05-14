@@ -1,4 +1,5 @@
 use js_sys::Array;
+use log::warn;
 use screeps_arena::game::pathfinder::CostMatrix;
 use screeps_arena::game::utils::{get_objects_by_prototype, get_range};
 use screeps_arena::{prototypes, Creep, GameObject, OwnedStructureProperties};
@@ -77,10 +78,13 @@ pub fn is_near_to_teammates(creep: &Creep, teammates: &Option<Vec<GameObject>>) 
 }
 
 pub fn find_lowest_hits_from_array(array: Option<Array>) -> Option<Creep> {
+    // warn!("我是Baz, 我是Baz");
     if array.is_some() {
         let array = array.unwrap();
         let mut min_hits_one = array.at(0).unchecked_into::<Creep>();
+        // warn!("array lalalalalalalala: {}", Array::is_array(array.as_ref()));
         for num in 0..array.length() {
+            // warn!("hahahahahaha   array is some!!!!!!!");
             if array.at(num as i32).unchecked_into::<Creep>().hits() < min_hits_one.hits() {
                 min_hits_one = array.at(num as i32).unchecked_into::<Creep>();
             }

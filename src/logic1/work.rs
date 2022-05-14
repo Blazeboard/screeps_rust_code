@@ -27,8 +27,8 @@ pub fn work() {
                         let worker_container_in_home_closest =
                             find_closest_by_range(worker.as_ref(), &containers_in_home);
                         move_to_withdraw(&worker, &worker_container_in_home_closest);
-                        warn!("***{}", worker.store().get_used_capacity(Some(ResourceType::Energy)));
-                        warn!("***{}", worker.store().get(ResourceType::Energy).unwrap());
+                        // warn!("***{}", worker.store().get_used_capacity(Some(ResourceType::Energy)));
+                        // warn!("***{}", worker.store().get(ResourceType::Energy).unwrap());
                     } else {
                         let worker_my_construction_sites_closest =
                             find_closest_by_range(worker.as_ref(), &my_construction_sites);
